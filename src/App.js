@@ -6,6 +6,7 @@ import abi from "./utils/WavePortal.json";
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState("");
   const [allWaves, setAllWaves] = useState([]);
+  const [message, setMessage] = useState("");
 
   const contractAddress = "0x16de53B47BD7cC1a652f0F50dE6BAcB672Bc0eB1";
   const contractABI = abi.abi;
@@ -72,7 +73,7 @@ const App = () => {
         /*
         * Execute the actual wave from your smart contract
         */
-        const waveTxn = await wavePortalContract.wave("Hello world!");
+        const waveTxn = await wavePortalContract.wave(message);
         console.log("Mining...", waveTxn.hash);
 
         await waveTxn.wait();
@@ -126,6 +127,17 @@ const App = () => {
       console.log(error);
     }
   }
+  function handleChange(event) {
+    const text = event.target.value;
+    setMessage(text);
+    console.log(message);
+
+  }
+  function handleSubmit(event) {
+    event.preventDefault();
+    console.log("i got triggered");
+    wave();
+  }
 
 
   useEffect(() => {
@@ -140,12 +152,14 @@ const App = () => {
         </div>
 
         <div className="bio">
-          I am farza and I worked on self-driving cars so that's pretty cool right? Connect your Ethereum wallet and wave at me!
+          I am Sebastien and I launched Krosrods, a social App for Artists, Venues, Public and more... 
+          <br></br>Connect your Ethereum wallet and wave at me!
         </div>
-
-        <button className="waveButton" onClick={wave}>
-          Wave at Me
-        </button>
+        <form className="formWave" onSubmit={handleSubmit}>
+          <input className="inputMessage" onChange={handleChange} placeholder="your message" value={message}/>
+          <br></br>
+          <input type="submit" className="waveButton" value="Wave at me" />
+        </form>
 
         {/*
         * If there is no currentAccount render this button
@@ -158,7 +172,7 @@ const App = () => {
 
         {allWaves.map((wave, index) => {
           return (
-            <div key={index} style={{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px" }}>
+            <div key={index} style={{ backgroundColor: "#F7ECDE", marginTop: "16px", padding: "8px" }}>
               <div>Address: {wave.address}</div>
               <div>Time: {wave.timestamp.toString()}</div>
               <div>Message: {wave.message}</div>
