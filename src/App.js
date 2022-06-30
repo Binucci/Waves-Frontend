@@ -8,7 +8,7 @@ const App = () => {
   const [allWaves, setAllWaves] = useState([]);
   const [message, setMessage] = useState("");
 
-  const contractAddress = "0x16de53B47BD7cC1a652f0F50dE6BAcB672Bc0eB1";
+  const contractAddress = "0x78c6C72596AC4597417CA5fDB2b3380e4871D88E";
   const contractABI = abi.abi;
 
   const checkIfWalletIsConnected = async () => {
@@ -90,43 +90,32 @@ const App = () => {
   }
 
   const getAllWaves = async () => {
+    const { ethereum } = window;
+  
     try {
-      const { ethereum } = window;
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-
-        /*
-         * Call the getAllWaves method from your Smart Contract
-         */
         const waves = await wavePortalContract.getAllWaves();
-
-
-        /*
-         * We only need address, timestamp, and message in our UI so let's
-         * pick those out
-         */
-        let wavesCleaned = [];
-        waves.forEach(wave => {
-          wavesCleaned.push({
+  
+        const wavesCleaned = waves.map(wave => {
+          return {
             address: wave.waver,
             timestamp: new Date(wave.timestamp * 1000),
-            message: wave.message
-          });
+            message: wave.message,
+          };
         });
-
-        /*
-         * Store our data in React State
-         */
+  
         setAllWaves(wavesCleaned);
       } else {
-        console.log("Ethereum object doesn't exist!")
+        console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
       console.log(error);
     }
-  }
+  };
+
   function handleChange(event) {
     const text = event.target.value;
     setMessage(text);
@@ -139,7 +128,35 @@ const App = () => {
     wave();
   }
 
+  useEffect(() => {
+    let wavePortalContract;
 
+    const onNewWave = (from, timestamp, message) => {
+      console.log("NewWave", from, timestamp, message);
+      setAllWaves(prevState => [
+        ...prevState,
+        {
+          address: from,
+          timestamp: new Date(timestamp * 1000),
+          message: message,
+        },
+      ]);
+    };
+
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+      wavePortalContract.on("NewWave", onNewWave);
+    }
+
+    return () => {
+      if (wavePortalContract) {
+        wavePortalContract.off("NewWave", onNewWave);
+      }
+    };
+  }, []);
   useEffect(() => {
     checkIfWalletIsConnected();
   }, [])
@@ -152,8 +169,14 @@ const App = () => {
         </div>
 
         <div className="bio">
-          I am Sebastien and I launched Krosrods, a social App for Artists, Venues, Public and more... 
-          <br></br>Connect your Ethereum wallet and wave at me!
+          I am Sebastien Bielecki.
+          <br></br>
+
+          I am found of Web3.
+          <br></br>
+          Check this short App and send me a message. It will be stored on Blockchain.
+          <br></br>
+          Connect your Ethereum wallet and wave at me!
         </div>
         <form className="formWave" onSubmit={handleSubmit}>
           <input className="inputMessage" onChange={handleChange} placeholder="your message" value={message}/>
